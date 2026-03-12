@@ -17,6 +17,7 @@ export default function MovieTable() {
   const [loadedPage, setLoadedPage] = useState(-1);
 
   const loading = page !== loadedPage;
+  console.log("movies")
 
   useEffect(() => {
     let cancelled = false;
@@ -91,27 +92,7 @@ export default function MovieTable() {
         </table>
       </div>
 
-      {totalPages > 1 && (
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", marginTop: "1rem" }}>
-          <button
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
-            disabled={page === 0}
-            style={btnStyle(page === 0)}
-          >
-            ← Prev
-          </button>
-          <span style={{ fontSize: "0.875rem", color: "#4b5563" }}>
-            Page {page + 1} of {totalPages}
-          </span>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={page >= totalPages - 1}
-            style={btnStyle(page >= totalPages - 1)}
-          >
-            Next →
-          </button>
-        </div>
-      )}
+
     </div>
   );
 }
