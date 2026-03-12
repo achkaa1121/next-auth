@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-
+import { useEffect, useState } from "react";
 const PAGE_SIZE = 20;
 
 type Movie = {
@@ -15,30 +14,31 @@ export default function MovieTable() {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
+  const [loadedPage, setLoadedPage] = useState(-1);
 
-  const [loading, setLoading] = useState(false);
-
-  const fetchMovies = useCallback(async () => {
-    setLoading(true);
-    const params = new URLSearchParams();
-
-    params.set("limit", String(PAGE_SIZE));
-    params.set("skip", String(page * PAGE_SIZE));
-
-    const res = await fetch(`/api/movies?${params.toString()}`);
-    if (!res.ok) {
-      setLoading(false);
-      return;
-    }
-    const data = await res.json();
-    setMovies(data.movies ?? []);
-    setTotal(data.total ?? 0);
-    setLoading(false);
-  }, [ page]);
+  const loading = page !== loadedPage;
 
   useEffect(() => {
-    fetchMovies();
-  }, [fetchMovies]);
+    let cancelled = false;
+    const params = new URLSearchParams({
+      limit: String(PAGE_SIZE),
+      skip: String(page * PAGE_SIZE),
+    });
+
+    fetch(`/api/movies?${params}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        setMovies(data.movies ?? []);
+        setTotal(data.total ?? 0);
+        setLoadedPage(page);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadedPage(page);
+      });
+
+    return () => { cancelled = true; };
+  }, [page]);
 
 
 
