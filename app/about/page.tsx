@@ -1,9 +1,8 @@
 import { ContactUs } from "@/modules/about/components/ContactUs";
+import { GET } from "@/app/api/about/route";
 
 export default async function About() {
-  const response = await fetch(`http://localhost:3000/api/about`, {
-    cache: "force-cache"
-  });
+  const response = await GET();
   const content = await response.json();
 
   return (
