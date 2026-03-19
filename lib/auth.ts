@@ -1,8 +1,9 @@
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { authConfig } from "@/lib/auth.config";
+import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-
 // Суурилагдсан төрлүүдийг `role` талбараар өргөтгөх
 declare module "next-auth" {
   interface Session {
@@ -21,8 +22,27 @@ declare module "next-auth" {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
+  providers: [
+    ...authConfig.providers,
+    Credentials({
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email as string },
+        });
+        if (!user) return null;
 
-  ...authConfig,
+        const valid = await bcrypt.compare(
+          credentials.password as string,
+          user.password as string,
+        );
+        return valid ? user : null;
+      },
+    }),
+  ],
 
   // JWT cookie strategy — Edge middleware-тай нийцтэй.
   // Adapter байгаа тул User + Account MongoDB-д хадгалагдана.
